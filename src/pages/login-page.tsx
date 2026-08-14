@@ -8,7 +8,10 @@ import { login } from '../lib/api'
 import { useAuthStore } from '../lib/auth-store'
 
 const loginSchema = z.object({
-  email: z.email('Enter a valid email address.'),
+  email: z.preprocess(
+    (value) => (typeof value === 'string' ? value.trim() : value),
+    z.email('Enter a valid email address.'),
+  ),
   password: z.string().min(6, 'Password must be at least 6 characters.'),
 })
 

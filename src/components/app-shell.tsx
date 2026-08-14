@@ -1,7 +1,9 @@
 import { useState } from 'react'
-import { Building2, Heart, Home, LogIn, Menu, PlusSquare, UserCircle2, X } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { Building2, Heart, Home, LogIn, Menu, PlusSquare, ShieldCheck, UserCircle2, X } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router-dom'
 
+import { fetchProfile } from '../lib/api'
 import { useAuthStore } from '../lib/auth-store'
 import { cn } from '../lib/utils'
 
@@ -11,18 +13,30 @@ const guestLinks = [
   { to: '/register', label: 'Register', icon: UserCircle2 },
 ]
 
-const memberLinks = [
-  { to: '/', label: 'Discover', icon: Home },
-  { to: '/wishlist', label: 'Wishlist', icon: Heart },
-  { to: '/create-listing', label: 'Create Listing', icon: PlusSquare },
-  { to: '/profile', label: 'Profile', icon: UserCircle2 },
-]
-
 export function AppShell() {
   const token = useAuthStore((state) => state.token)
   const logout = useAuthStore((state) => state.logout)
-  const links = token ? memberLinks : guestLinks
   const [mobileOpen, setMobileOpen] = useState(false)
+
+  const profileQuery = useQuery({
+    queryKey: ['profile'],
+    queryFn: fetchProfile,
+    enabled: Boolean(token),
+    retry: false,
+  })
+
+  const isSeller = profileQuery.data?.role === 'SELLER'
+  const isAdmin = profileQuery.data?.role === 'ADMIN'
+
+  const links = !token
+    ? guestLinks
+    : [
+        { to: '/', label: 'Discover', icon: Home },
+        { to: '/wishlist', label: 'Wishlist', icon: Heart },
+        ...(isSeller ? [{ to: '/create-listing', label: 'Create Listing', icon: PlusSquare }] : []),
+        ...(isAdmin ? [{ to: '/admin', label: 'Admin', icon: ShieldCheck }] : []),
+        { to: '/profile', label: 'Profile', icon: UserCircle2 },
+      ]
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">

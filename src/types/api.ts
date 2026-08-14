@@ -29,6 +29,8 @@ export interface PropertyDetails {
   price: number
   township: string
   city: string
+  latitude: number | null
+  longitude: number | null
   status: string
   ownerId: number | null
   imageUrls: string[]
@@ -90,5 +92,39 @@ export interface PropertyPayload {
   price: number
   township: string
   city: string
+  latitude?: number
+  longitude?: number
   ownerId: number
+}
+
+export interface InterestPayload {
+  propertyId: number
+  message: string
+}
+
+export type InterestStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
+
+export interface InterestRequestItem {
+  id: number
+  propertyId: number | null
+  propertyTitle: string | null
+  requesterId: number | null
+  requesterEmail: string | null
+  requesterName: string | null
+  message: string | null
+  status: InterestStatus
+  createdAt: string
+}
+
+export interface PendingPropertyItem {
+  id: number
+  title: string
+  propertyType: string
+  listingType: string
+  price: number
+  township: string
+  city: string
+  ownerEmail: string | null
+  ownerName: string | null
+  createdAt: string
 }

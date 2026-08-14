@@ -1,6 +1,7 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 
 import { AppShell } from './components/app-shell'
+import { AdminPage } from './pages/admin-page'
 import { CreateListingPage } from './pages/create-listing-page'
 import { HomePage } from './pages/home-page'
 import { LoginPage } from './pages/login-page'
@@ -22,6 +23,8 @@ const router = createBrowserRouter([
       { path: 'profile', element: <ProfilePage /> },
       { path: 'wishlist', element: <WishlistPage /> },
       { path: 'create-listing', element: <CreateListingPage /> },
+      { path: 'edit-listing/:id', element: <CreateListingPage /> },
+      { path: 'admin', element: <AdminPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

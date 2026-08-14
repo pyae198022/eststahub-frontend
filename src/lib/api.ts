@@ -2,9 +2,12 @@ import axios from 'axios'
 
 import { useAuthStore } from './auth-store'
 import type {
+  InterestPayload,
+  InterestRequestItem,
   LoginPayload,
   ModificationResult,
   Pagination,
+  PendingPropertyItem,
   ProfilePayload,
   PropertyDetails,
   PropertyListItem,
@@ -92,5 +95,54 @@ export async function toggleWishlist(userId: number, propertyId: number) {
 
 export async function createProperty(payload: PropertyPayload) {
   const response = await api.post<ModificationResult<number>>('/properties', payload)
+  return response.data
+}
+
+export async function updateProperty(id: number, payload: PropertyPayload) {
+  const response = await api.put<ModificationResult<number>>(`/properties/${id}`, payload)
+  return response.data
+}
+
+export async function deleteProperty(id: number) {
+  const response = await api.delete<ModificationResult<number>>(`/properties/${id}`)
+  return response.data
+}
+
+export async function submitInterest(payload: InterestPayload) {
+  const response = await api.post<ModificationResult<number>>('/interests/request', payload)
+  return response.data
+}
+
+export async function fetchMyInterests(propertyId: number) {
+  const response = await api.get<InterestRequestItem[]>('/interests/mine', {
+    params: { propertyId },
+  })
+  return response.data
+}
+
+export async function fetchPendingInterests() {
+  const response = await api.get<InterestRequestItem[]>('/interests/admin/pending')
+  return response.data
+}
+
+export async function fetchOwnerInterests(propertyId: number) {
+  const response = await api.get<InterestRequestItem[]>('/interests/owner', {
+    params: { propertyId },
+  })
+  return response.data
+}
+
+export async function decideInterest(id: number, action: 'approve' | 'reject') {
+  const response = await api.put<ModificationResult<number>>(`/interests/${id}/${action}`)
+  return response.data
+}
+
+export async function fetchPendingProperties() {
+  const response = await api.get<PendingPropertyItem[]>('/properties/admin/pending')
+  return response.data
+}
+
+export async function decideProperty(id: number, action: 'approve' | 'reject') {
+  const response = await api.put<ModificationResult<number>>(`/properties/admin/${id}/${action}`)
   return response.data
 }
