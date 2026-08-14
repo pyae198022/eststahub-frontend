@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Check, X } from 'lucide-react'
+import { Check, Eye, X } from 'lucide-react'
 import { Link, Navigate } from 'react-router-dom'
 
 import { decideInterest, decideProperty, fetchPendingInterests, fetchPendingProperties, fetchProfile } from '../lib/api'
@@ -89,7 +89,7 @@ export function AdminPage() {
                 <div className="min-w-0 space-y-1 text-sm">
                   <p className="text-lg font-semibold text-white">
                     {property.title}
-                    <span className="ml-3 font-normal text-emerald-300">
+                    <span className="ml-3 font-normal text-amber-300">
                       {formatPrice(property.price)}
                     </span>
                   </p>
@@ -103,11 +103,18 @@ export function AdminPage() {
                   <p className="text-xs text-slate-500">Posted {formatDate(property.createdAt)}</p>
                 </div>
                 <div className="flex shrink-0 gap-3">
+                  <Link
+                    to={`/properties/${property.id}`}
+                    className="inline-flex items-center gap-2 rounded-full border border-white/15 px-5 py-2 font-semibold text-slate-200 transition hover:border-amber-400/40 hover:bg-amber-500/10 hover:text-white"
+                  >
+                    <Eye className="size-4" />
+                    View details
+                  </Link>
                   <button
                     type="button"
                     disabled={propertyMutation.isPending}
                     onClick={() => propertyMutation.mutate({ id: property.id, action: 'approve' })}
-                    className="inline-flex items-center gap-2 rounded-full bg-emerald-500 px-5 py-2 font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:opacity-60"
+                    className="inline-flex items-center gap-2 rounded-full bg-amber-500 px-5 py-2 font-semibold text-slate-950 transition hover:bg-amber-400 disabled:opacity-60"
                   >
                     <Check className="size-4" />
                     Approve
@@ -170,7 +177,7 @@ export function AdminPage() {
                   type="button"
                   disabled={decideMutation.isPending}
                   onClick={() => decideMutation.mutate({ id: request.id, action: 'approve' })}
-                  className="inline-flex items-center gap-2 rounded-full bg-emerald-500 px-5 py-2 font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:opacity-60"
+                  className="inline-flex items-center gap-2 rounded-full bg-amber-500 px-5 py-2 font-semibold text-slate-950 transition hover:bg-amber-400 disabled:opacity-60"
                 >
                   <Check className="size-4" />
                   Confirm
@@ -211,7 +218,7 @@ export function AdminPage() {
 
       <p className="text-sm text-slate-500">
         Buyers can re-request after a rejection. Confirmed buyers see an approval message on the
-        property page. <Link to="/" className="text-emerald-300 hover:underline">Back to listings</Link>
+        property page. <Link to="/" className="text-amber-300 hover:underline">Back to listings</Link>
       </p>
     </div>
   )

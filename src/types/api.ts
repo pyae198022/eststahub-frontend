@@ -33,6 +33,8 @@ export interface PropertyDetails {
   longitude: number | null
   status: string
   ownerId: number | null
+  ownerName: string | null
+  ownerEmail: string | null
   imageUrls: string[]
   viewCount: number
 }
@@ -43,8 +45,10 @@ export interface UserProfile {
   fullName: string | null
   profileImageUrl: string | null
   bio: string | null
+  nrc: string | null
   phone: string | null
   role: UserRole | null
+  createdAt: string | null
 }
 
 export interface ModificationResult<T> {
@@ -75,13 +79,22 @@ export interface RegisterPayload {
   password: string
   fullName: string
   role: UserRole
+  bio?: string
 }
 
 export interface ProfilePayload {
   fullName: string
   profileImageUrl: string
   bio: string
+  nrc: string
   phone: string
+}
+
+export interface PropertyDocumentItem {
+  id: number
+  documentName: string
+  documentUrl: string
+  uploadedAt: string
 }
 
 export interface PropertyPayload {
@@ -111,6 +124,7 @@ export interface InterestRequestItem {
   requesterId: number | null
   requesterEmail: string | null
   requesterName: string | null
+  requesterBio: string | null
   message: string | null
   status: InterestStatus
   createdAt: string

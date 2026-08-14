@@ -10,6 +10,7 @@ import type {
   PendingPropertyItem,
   ProfilePayload,
   PropertyDetails,
+  PropertyDocumentItem,
   PropertyListItem,
   PropertyPayload,
   PropertySearchParams,
@@ -36,6 +37,11 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       useAuthStore.getState().logout()
+    }
+
+    const message = error.response?.data?.message
+    if (message) {
+      return Promise.reject(new Error(message))
     }
 
     return Promise.reject(error)
@@ -65,6 +71,11 @@ export async function fetchProperties(params: PropertySearchParams) {
   return response.data
 }
 
+export async function fetchMyListings() {
+  const response = await api.get<PropertyListItem[]>('/properties/mine')
+  return response.data
+}
+
 export async function fetchProperty(id: string) {
   const response = await api.get<PropertyDetails>(`/properties/${id}`)
   return response.data
@@ -75,8 +86,46 @@ export async function fetchProfile() {
   return response.data
 }
 
+export async function fetchUserProfile(userId: number) {
+  const response = await api.get<UserProfile>(`/user/profile/${userId}`)
+  return response.data
+}
+
 export async function updateProfile(payload: ProfilePayload) {
   const response = await api.put<ModificationResult<number>>('/user/profile', payload)
+  return response.data
+}
+
+export async function uploadProfileImage(file: File) {
+  const formData = new FormData()
+  formData.append('file', file)
+
+  const response = await api.post<ModificationResult<number>>('/user/profile/image', formData)
+
+  return response.data
+}
+
+export async function fetchPropertyDocuments(propertyId: number) {
+  const response = await api.get<PropertyDocumentItem[]>(`/properties/${propertyId}/documents`)
+  return response.data
+}
+
+export async function uploadPropertyDocument(propertyId: number, file: File) {
+  const formData = new FormData()
+  formData.append('file', file)
+
+  const response = await api.post<ModificationResult<number>>(
+    `/properties/${propertyId}/documents`,
+    formData,
+  )
+
+  return response.data
+}
+
+export async function deletePropertyDocument(propertyId: number, documentId: number) {
+  const response = await api.delete<ModificationResult<number>>(
+    `/properties/${propertyId}/documents/${documentId}`,
+  )
   return response.data
 }
 
@@ -108,6 +157,23 @@ export async function deleteProperty(id: number) {
   return response.data
 }
 
+export async function addPropertyImages(propertyId: number, urls: string[], coverIndex?: number) {
+  const response = await api.post<ModificationResult<number>>(`/properties/${propertyId}/images`, urls, {
+    params: { coverIndex },
+  })
+  return response.data
+}
+
+export async function uploadPropertyImages(propertyId: number, files: File[]) {
+  const formData = new FormData()
+  files.forEach((file) => formData.append('files', file))
+  const response = await api.post<ModificationResult<number>>(
+    `/properties/${propertyId}/images/upload`,
+    formData,
+  )
+  return response.data
+}
+
 export async function submitInterest(payload: InterestPayload) {
   const response = await api.post<ModificationResult<number>>('/interests/request', payload)
   return response.data
@@ -125,9 +191,9 @@ export async function fetchPendingInterests() {
   return response.data
 }
 
-export async function fetchOwnerInterests(propertyId: number) {
+export async function fetchOwnerInterests(propertyId?: number) {
   const response = await api.get<InterestRequestItem[]>('/interests/owner', {
-    params: { propertyId },
+    params: propertyId != null ? { propertyId } : undefined,
   })
   return response.data
 }

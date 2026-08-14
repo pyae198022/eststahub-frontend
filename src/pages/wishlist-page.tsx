@@ -35,10 +35,10 @@ export function WishlistPage() {
   return (
     <div className="space-y-6">
       <div className="space-y-3">
-        <p className="text-sm uppercase tracking-[0.24em] text-emerald-300/80">Saved homes</p>
+        <p className="text-sm uppercase tracking-[0.24em] text-amber-300/80">Saved homes</p>
         <h1 className="text-4xl font-semibold text-white">Your wishlist</h1>
         <p className="text-slate-400">
-          This page uses the backend’s current `userId`-based wishlist endpoints.
+          Homes you&apos;ve saved to revisit later. Tap the heart to remove one.
         </p>
       </div>
 

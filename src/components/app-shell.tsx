@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Building2, Heart, Home, LogIn, Menu, PlusSquare, ShieldCheck, UserCircle2, X } from 'lucide-react'
+import { Building2, FolderOpen, Heart, Home, LogIn, Menu, PlusSquare, ShieldCheck, UserCircle2, X } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router-dom'
 
-import { fetchProfile } from '../lib/api'
+import { fetchOwnerInterests, fetchPendingInterests, fetchPendingProperties, fetchProfile } from '../lib/api'
 import { useAuthStore } from '../lib/auth-store'
 import { cn } from '../lib/utils'
 
@@ -28,12 +28,41 @@ export function AppShell() {
   const isSeller = profileQuery.data?.role === 'SELLER'
   const isAdmin = profileQuery.data?.role === 'ADMIN'
 
+  const pendingPropertiesQuery = useQuery({
+    queryKey: ['admin-pending-properties'],
+    queryFn: fetchPendingProperties,
+    enabled: Boolean(token && isAdmin),
+    refetchInterval: 30000,
+  })
+
+  const pendingInterestsQuery = useQuery({
+    queryKey: ['admin-pending-interests'],
+    queryFn: fetchPendingInterests,
+    enabled: Boolean(token && isAdmin),
+    refetchInterval: 30000,
+  })
+
+  const adminBadgeCount =
+    (pendingPropertiesQuery.data?.length ?? 0) + (pendingInterestsQuery.data?.length ?? 0)
+
+  const sellerInterestsQuery = useQuery({
+    queryKey: ['seller-interests'],
+    queryFn: () => fetchOwnerInterests(),
+    enabled: Boolean(token && isSeller),
+    refetchInterval: 30000,
+  })
+
+  const sellerBadgeCount = sellerInterestsQuery.data?.length ?? 0
+
   const links = !token
     ? guestLinks
     : [
         { to: '/', label: 'Discover', icon: Home },
-        { to: '/wishlist', label: 'Wishlist', icon: Heart },
-        ...(isSeller ? [{ to: '/create-listing', label: 'Create Listing', icon: PlusSquare }] : []),
+        ...(!isAdmin ? [{ to: '/wishlist', label: 'Wishlist', icon: Heart }] : []),
+        ...(isSeller ? [
+          { to: '/my-listings', label: 'My Listings', icon: FolderOpen },
+          { to: '/create-listing', label: 'Create Listing', icon: PlusSquare },
+        ] : []),
         ...(isAdmin ? [{ to: '/admin', label: 'Admin', icon: ShieldCheck }] : []),
         { to: '/profile', label: 'Profile', icon: UserCircle2 },
       ]
@@ -43,11 +72,11 @@ export function AppShell() {
       <header className="sticky top-0 z-50 border-b border-white/10 bg-slate-950/80 backdrop-blur-xl">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-4">
           <NavLink to="/" className="flex items-center gap-3 text-white group">
-            <div className="rounded-2xl bg-emerald-500/15 p-2 text-emerald-300 ring-1 ring-emerald-400/30 transition-all duration-300 group-hover:bg-emerald-500/25 group-hover:ring-emerald-400/50">
+            <div className="rounded-2xl bg-amber-500/15 p-2 text-amber-300 ring-1 ring-amber-400/30 transition-all duration-300 group-hover:bg-amber-500/25 group-hover:ring-amber-400/50">
               <Building2 className="size-5" />
             </div>
             <div>
-              <div className="text-sm font-medium uppercase tracking-[0.28em] text-emerald-300/80">
+              <div className="text-sm font-medium uppercase tracking-[0.28em] text-amber-300/80">
                 EstateHub
               </div>
               <div className="text-sm text-slate-400">Find your dream home</div>
@@ -71,6 +100,16 @@ export function AppShell() {
               >
                 <Icon className="size-4" />
                 {label}
+                {to === '/admin' && adminBadgeCount > 0 ? (
+                  <span className="rounded-full bg-amber-400 px-2 py-0.5 text-xs font-bold text-slate-950">
+                    {adminBadgeCount}
+                  </span>
+                ) : null}
+                {to === '/my-listings' && sellerBadgeCount > 0 ? (
+                  <span className="rounded-full bg-amber-400 px-2 py-0.5 text-xs font-bold text-slate-950">
+                    {sellerBadgeCount}
+                  </span>
+                ) : null}
               </NavLink>
             ))}
             {token ? (
@@ -114,6 +153,16 @@ export function AppShell() {
               >
                 <Icon className="size-4" />
                 {label}
+                {to === '/admin' && adminBadgeCount > 0 ? (
+                  <span className="rounded-full bg-amber-400 px-2 py-0.5 text-xs font-bold text-slate-950">
+                    {adminBadgeCount}
+                  </span>
+                ) : null}
+                {to === '/my-listings' && sellerBadgeCount > 0 ? (
+                  <span className="rounded-full bg-amber-400 px-2 py-0.5 text-xs font-bold text-slate-950">
+                    {sellerBadgeCount}
+                  </span>
+                ) : null}
               </NavLink>
             ))}
             {token ? (
@@ -137,10 +186,10 @@ export function AppShell() {
         <div className="mx-auto max-w-7xl px-6 py-8">
           <div className="flex flex-col items-center gap-6 md:flex-row md:justify-between">
             <div className="flex items-center gap-3">
-              <div className="rounded-2xl bg-emerald-500/15 p-2 text-emerald-300 ring-1 ring-emerald-400/30">
+              <div className="rounded-2xl bg-amber-500/15 p-2 text-amber-300 ring-1 ring-amber-400/30">
                 <Building2 className="size-4" />
               </div>
-              <span className="text-sm font-medium uppercase tracking-[0.2em] text-emerald-300/60">
+              <span className="text-sm font-medium uppercase tracking-[0.2em] text-amber-300/60">
                 EstateHub
               </span>
             </div>

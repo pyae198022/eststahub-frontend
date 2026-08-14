@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
+import type { Resolver } from 'react-hook-form'
 import { Link, useNavigate } from 'react-router-dom'
 import { z } from 'zod'
 
@@ -17,6 +18,8 @@ const loginSchema = z.object({
 
 type LoginValues = z.infer<typeof loginSchema>
 
+const loginResolver = zodResolver(loginSchema) as unknown as Resolver<LoginValues>
+
 export function LoginPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -27,7 +30,7 @@ export function LoginPage() {
     handleSubmit,
     formState: { errors },
   } = useForm<LoginValues>({
-    resolver: zodResolver(loginSchema),
+    resolver: loginResolver,
     defaultValues: {
       email: '',
       password: '',
@@ -46,11 +49,10 @@ export function LoginPage() {
   return (
     <div className="mx-auto max-w-xl rounded-[32px] border border-white/10 bg-white/5 p-8">
       <div className="space-y-3">
-        <p className="text-sm uppercase tracking-[0.24em] text-emerald-300/80">Welcome back</p>
+        <p className="text-sm uppercase tracking-[0.24em] text-amber-300/80">Welcome back</p>
         <h1 className="text-4xl font-semibold text-white">Login to EstateHub</h1>
         <p className="text-slate-400">
-          The backend returns a raw JWT token, so this client stores it and uses the profile
-          endpoint to hydrate the signed-in experience.
+          Welcome back — sign in to browse, save and connect with verified sellers.
         </p>
       </div>
 
@@ -84,14 +86,14 @@ export function LoginPage() {
 
         {loginMutation.isError ? (
           <p className="rounded-2xl border border-rose-400/20 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">
-            Login failed. Check the backend server, database, and credentials.
+            {(loginMutation.error as Error).message}
           </p>
         ) : null}
 
         <button
           type="submit"
           disabled={loginMutation.isPending}
-          className="w-full rounded-full bg-white px-5 py-3 font-semibold text-slate-950 transition hover:bg-emerald-200 disabled:opacity-60"
+          className="w-full rounded-full bg-white px-5 py-3 font-semibold text-slate-950 transition hover:bg-amber-200 disabled:opacity-60"
         >
           {loginMutation.isPending ? 'Signing in...' : 'Sign in'}
         </button>
@@ -99,7 +101,7 @@ export function LoginPage() {
 
       <p className="mt-6 text-sm text-slate-400">
         New here?{' '}
-        <Link to="/register" className="font-medium text-emerald-300 hover:text-emerald-200">
+        <Link to="/register" className="font-medium text-amber-300 hover:text-amber-200">
           Create an account
         </Link>
       </p>

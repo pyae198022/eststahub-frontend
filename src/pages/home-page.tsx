@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Search, SlidersHorizontal } from 'lucide-react'
+import { MapPin, Search, SlidersHorizontal } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
 import { fetchProfile, fetchProperties, fetchWishlist, toggleWishlist } from '../lib/api'
 import { useAuthStore } from '../lib/auth-store'
@@ -25,6 +26,7 @@ export function HomePage() {
   const [page, setPage] = useState(0)
   const token = useAuthStore((state) => state.token)
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
 
   const patchFilters = (updates: Partial<typeof initialFilters>) => {
     setFilters((prev) => ({ ...prev, ...updates }))
@@ -69,76 +71,64 @@ export function HomePage() {
 
   return (
     <div className="space-y-8">
-      <section className="grid gap-6 rounded-[32px] border border-white/10 bg-[radial-gradient(circle_at_top_left,_rgba(16,185,129,0.24),_transparent_32%),linear-gradient(135deg,rgba(15,23,42,0.96),rgba(15,23,42,0.88))] p-8 lg:grid-cols-[1.5fr_1fr]">
+      <section className="rounded-[32px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(251,191,36,0.08),transparent_32%),linear-gradient(135deg,rgba(15,23,42,0.96),rgba(15,23,42,0.88))] p-8">
         <div className="space-y-6">
-          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-4 py-2 text-sm text-emerald-200">
+          <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-400/10 px-4 py-2 text-sm text-amber-200">
             <SlidersHorizontal className="size-4" />
             EstateHub — find your next address
           </div>
           <div className="space-y-4">
             <h1 className="max-w-3xl text-4xl font-semibold tracking-tight text-white md:text-6xl">
-              Find a place you&apos;ll love to live in.
+              Find your dream home.
             </h1>
             <p className="max-w-2xl text-lg text-slate-300">
-              Discover verified homes, condos, and land across Yangon, Mandalay and beyond —
-              whether you&apos;re buying, renting, or listing your own property.
+              Verified homes, condos &amp; land across Myanmar.
             </p>
           </div>
-        </div>
 
-        <div className="rounded-3xl border border-white/10 bg-slate-950/70 p-6">
-          <div className="mb-5 flex items-center gap-3">
-            <Search className="size-5 text-emerald-300" />
-            <h2 className="text-lg font-semibold text-white">Search filters</h2>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="flex flex-col gap-2 lg:flex-row lg:items-stretch lg:gap-3">
+          <label className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3.5">
+            <Search className="size-4 shrink-0 text-amber-300" />
             <input
-              className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none ring-0 placeholder:text-slate-500"
+              className="w-full bg-transparent text-sm text-white outline-none placeholder:text-slate-500"
               placeholder="Keyword"
               value={filters.keyword}
               onChange={(event) => patchFilters({ keyword: event.target.value })}
             />
+          </label>
+          <label className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3.5">
+            <MapPin className="size-4 shrink-0 text-amber-300" />
             <input
-              className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500"
+              className="w-full bg-transparent text-sm text-white outline-none placeholder:text-slate-500"
               placeholder="Township"
               value={filters.township}
               onChange={(event) => patchFilters({ township: event.target.value })}
             />
-            <select
-              className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none"
-              value={filters.listingType}
-              onChange={(event) => patchFilters({ listingType: event.target.value })}
-            >
-              <option value="">Any listing type</option>
-              <option value="SALE">Sale</option>
-              <option value="RENT">Rent</option>
-            </select>
-            <select
-              className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none"
-              value={filters.propertyType}
-              onChange={(event) => patchFilters({ propertyType: event.target.value })}
-            >
-              <option value="">Any property type</option>
-              <option value="CONDO">Condo</option>
-              <option value="HOUSE">House</option>
-              <option value="LAND">Land</option>
-              <option value="APARTMENT">Apartment</option>
-            </select>
+          </label>
+          <label className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3.5">
+            <span className="shrink-0 text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Min
+            </span>
             <input
               type="number"
-              className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500"
-              placeholder="Minimum price"
+              className="w-full bg-transparent text-sm text-white outline-none placeholder:text-slate-500"
+              placeholder="Price"
               value={filters.minPrice}
               onChange={(event) => patchFilters({ minPrice: event.target.value })}
             />
+          </label>
+          <label className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3.5">
+            <span className="shrink-0 text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Max
+            </span>
             <input
               type="number"
-              className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500"
-              placeholder="Maximum price"
+              className="w-full bg-transparent text-sm text-white outline-none placeholder:text-slate-500"
+              placeholder="Price"
               value={filters.maxPrice}
               onChange={(event) => patchFilters({ maxPrice: event.target.value })}
             />
+          </label>
           </div>
         </div>
       </section>
@@ -164,10 +154,28 @@ export function HomePage() {
                 : '0 results from the live backend search endpoint.'}
             </p>
           </div>
-          <p className="max-w-xl text-sm text-slate-500">
-            Public browsing works best once the backend also opens `GET /api/properties/{'{id}'}`.
-            Right now only search is explicitly public in Spring Security.
-          </p>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <select
+              className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none"
+              value={filters.listingType}
+              onChange={(event) => patchFilters({ listingType: event.target.value })}
+            >
+              <option value="">Any listing type</option>
+              <option value="SALE">Sale</option>
+              <option value="RENT">Rent</option>
+            </select>
+            <select
+              className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none"
+              value={filters.propertyType}
+              onChange={(event) => patchFilters({ propertyType: event.target.value })}
+            >
+              <option value="">Any property type</option>
+              <option value="CONDO">Condo</option>
+              <option value="HOUSE">House</option>
+              <option value="LAND">Land</option>
+              <option value="APARTMENT">Apartment</option>
+            </select>
+          </div>
         </div>
 
         {propertiesQuery.isLoading ? (
@@ -183,7 +191,17 @@ export function HomePage() {
                 key={property.id}
                 property={property}
                 wishlisted={wishlistIds.has(property.id)}
-                onWishlistClick={token ? (propertyId) => toggleWishlistMutation.mutate(propertyId) : undefined}
+                onWishlistClick={
+                  profileQuery.data?.role === 'ADMIN'
+                    ? undefined
+                    : (propertyId) => {
+                        if (!token) {
+                          navigate('/login')
+                          return
+                        }
+                        toggleWishlistMutation.mutate(propertyId)
+                      }
+                }
               />
             ))}
           </div>

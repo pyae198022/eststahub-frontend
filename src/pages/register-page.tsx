@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
+import type { Resolver } from 'react-hook-form'
 import { Link, useNavigate } from 'react-router-dom'
 import { z } from 'zod'
 
@@ -14,9 +15,12 @@ const registerSchema = z.object({
   ),
   password: z.string().min(6, 'Password must be at least 6 characters.'),
   role: z.enum(['BUYER', 'SELLER']),
+  bio: z.string().max(300, 'Keep the bio short and clear.'),
 })
 
 type RegisterValues = z.infer<typeof registerSchema>
+
+const registerResolver = zodResolver(registerSchema) as unknown as Resolver<RegisterValues>
 
 export function RegisterPage() {
   const navigate = useNavigate()
@@ -26,12 +30,13 @@ export function RegisterPage() {
     handleSubmit,
     formState: { errors },
   } = useForm<RegisterValues>({
-    resolver: zodResolver(registerSchema),
+    resolver: registerResolver,
     defaultValues: {
       fullName: '',
       email: '',
       password: '',
       role: 'BUYER',
+      bio: '',
     },
   })
 
@@ -45,11 +50,10 @@ export function RegisterPage() {
   return (
     <div className="mx-auto max-w-xl rounded-[32px] border border-white/10 bg-white/5 p-8">
       <div className="space-y-3">
-        <p className="text-sm uppercase tracking-[0.24em] text-emerald-300/80">Get started</p>
+        <p className="text-sm uppercase tracking-[0.24em] text-amber-300/80">Get started</p>
         <h1 className="text-4xl font-semibold text-white">Create your account</h1>
         <p className="text-slate-400">
-          The backend supports `BUYER` and `SELLER` roles out of the box, so this screen maps
-          directly to the Spring registration payload.
+          Create an account to start buying, selling or renting with verified neighbours.
         </p>
       </div>
 
@@ -112,6 +116,20 @@ export function RegisterPage() {
           </select>
         </div>
 
+        <div className="space-y-2">
+          <label className="text-sm text-slate-300" htmlFor="register-bio">
+            Bio
+          </label>
+          <textarea
+            id="register-bio"
+            rows={4}
+            className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none placeholder:text-slate-500"
+            placeholder="Tell agents and buyers a little about yourself (optional)"
+            {...register('bio')}
+          />
+          {errors.bio ? <p className="text-sm text-rose-300">{errors.bio.message}</p> : null}
+        </div>
+
         {registerMutation.isError ? (
           <p className="rounded-2xl border border-rose-400/20 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">
             Registration failed. The email may already exist or the backend may be unavailable.
@@ -121,7 +139,7 @@ export function RegisterPage() {
         <button
           type="submit"
           disabled={registerMutation.isPending}
-          className="w-full rounded-full bg-white px-5 py-3 font-semibold text-slate-950 transition hover:bg-emerald-200 disabled:opacity-60"
+          className="w-full rounded-full bg-white px-5 py-3 font-semibold text-slate-950 transition hover:bg-amber-200 disabled:opacity-60"
         >
           {registerMutation.isPending ? 'Creating account...' : 'Create account'}
         </button>
@@ -129,7 +147,7 @@ export function RegisterPage() {
 
       <p className="mt-6 text-sm text-slate-400">
         Already have an account?{' '}
-        <Link to="/login" className="font-medium text-emerald-300 hover:text-emerald-200">
+        <Link to="/login" className="font-medium text-amber-300 hover:text-amber-200">
           Sign in
         </Link>
       </p>

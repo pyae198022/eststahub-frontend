@@ -26,7 +26,9 @@ body {
   margin: 0;
   min-width: 320px;
   background:
-    radial-gradient(circle at top, rgba(16, 185, 129, 0.14), transparent 22%),
+    radial-gradient(circle at 15% 0%, rgba(251, 191, 36, 0.08), transparent 22%),
+    radial-gradient(circle at 85% 15%, rgba(37, 99, 235, 0.16), transparent 38%),
+    radial-gradient(circle at 50% 100%, rgba(30, 58, 138, 0.18), transparent 45%),
     linear-gradient(180deg, #020617 0%, #0f172a 100%);
 }
 
@@ -88,8 +90,8 @@ a {
 }
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
-  50% { box-shadow: 0 0 20px 4px rgba(16, 185, 129, 0.15); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); }
+  50% { box-shadow: 0 0 20px 4px rgba(251, 191, 36, 0.15); }
 }
 
 .animate-fade-in-up {
@@ -110,14 +112,6 @@ a {
   background-size: 800px 100%;
   animation: shimmer 1.5s infinite;
   border-radius: 16px;
-}
-
-/* === Focus styles === */
-input:focus,
-select:focus,
-textarea:focus {
-  border-color: rgba(16, 185, 129, 0.5) !important;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
 }
 
 /* === Scrollbar === */

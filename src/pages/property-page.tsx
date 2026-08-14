@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, ChevronLeft, ChevronRight, Eye, Heart, MapPin, Pencil, Trash2 } from 'lucide-react'
+import { ArrowLeft, ChevronLeft, ChevronRight, Eye, FileText, MapPin, Pencil, Trash2, Upload, User } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
-import { deleteProperty, fetchMyInterests, fetchOwnerInterests, fetchProfile, fetchProperty, submitInterest, toggleWishlist } from '../lib/api'
+import { deleteProperty, deletePropertyDocument, fetchMyInterests, fetchOwnerInterests, fetchProfile, fetchProperty, fetchPropertyDocuments, submitInterest, uploadPropertyDocument } from '../lib/api'
 import { useAuthStore } from '../lib/auth-store'
 import { PropertyMap } from '../components/property-map'
 import { formatPrice } from '../lib/utils'
@@ -15,6 +15,7 @@ export function PropertyPage() {
   const queryClient = useQueryClient()
   const [activeIndex, setActiveIndex] = useState(0)
   const [interestMessage, setInterestMessage] = useState('')
+  const documentInputRef = useRef<HTMLInputElement>(null)
 
   const propertyQuery = useQuery({
     queryKey: ['property', id],
@@ -28,19 +29,6 @@ export function PropertyPage() {
     queryFn: fetchProfile,
     enabled: Boolean(token),
     retry: false,
-  })
-
-  const wishlistMutation = useMutation({
-    mutationFn: async () => {
-      if (!profileQuery.data?.id || !propertyQuery.data?.id) {
-        throw new Error('Login first to add this property to your wishlist.')
-      }
-
-      return toggleWishlist(profileQuery.data.id, propertyQuery.data.id)
-    },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['wishlist'] })
-    },
   })
 
   const deleteMutation = useMutation({
@@ -78,6 +66,35 @@ export function PropertyPage() {
     retry: false,
   })
 
+  const documentsQuery = useQuery({
+    queryKey: ['documents', propertyQuery.data?.id],
+    queryFn: () => fetchPropertyDocuments(propertyQuery.data!.id),
+    enabled: Boolean(
+      propertyQuery.data?.id &&
+        profileQuery.data?.role &&
+        (profileQuery.data.role === 'ADMIN' ||
+          (profileQuery.data.role === 'SELLER' &&
+            propertyQuery.data.ownerId != null &&
+            propertyQuery.data.ownerId === profileQuery.data.id)),
+    ),
+    retry: false,
+  })
+
+  const documentUploadMutation = useMutation({
+    mutationFn: (file: File) => uploadPropertyDocument(propertyQuery.data!.id, file),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['documents', propertyQuery.data?.id] })
+    },
+  })
+
+  const documentDeleteMutation = useMutation({
+    mutationFn: (documentId: number) =>
+      deletePropertyDocument(propertyQuery.data!.id, documentId),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['documents', propertyQuery.data?.id] })
+    },
+  })
+
   if (propertyQuery.isLoading) {
     return (
       <div className="rounded-3xl border border-white/10 bg-white/5 p-10 text-center text-slate-300">
@@ -108,6 +125,9 @@ export function PropertyPage() {
       property.ownerId != null &&
       property.ownerId === profileQuery.data.id,
   )
+  const isAdmin = profileQuery.data?.role === 'ADMIN'
+  const canViewDocuments = isAdmin || isOwner
+  const canManageDocuments = isOwner
 
   const images = property.imageUrls
   const goTo = (index: number) => setActiveIndex((index + images.length) % images.length)
@@ -118,7 +138,7 @@ export function PropertyPage() {
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="inline-flex items-center gap-2 rounded-full border border-white/15 px-4 py-2 text-sm font-medium text-slate-300 transition hover:border-emerald-400/40 hover:bg-emerald-500/10 hover:text-white"
+          className="inline-flex items-center gap-2 rounded-full border border-white/15 px-4 py-2 text-sm font-medium text-slate-300 transition hover:border-amber-400/40 hover:bg-amber-500/10 hover:text-white"
         >
           <ArrowLeft className="size-4" />
           Back
@@ -137,7 +157,7 @@ export function PropertyPage() {
                 className="aspect-[16/9] w-full animate-fade-in object-cover"
               />
             ) : (
-              <div className="flex aspect-[16/9] items-center justify-center bg-gradient-to-br from-emerald-500/20 to-sky-500/10 text-slate-300">
+              <div className="flex aspect-[16/9] items-center justify-center bg-gradient-to-br from-blue-950/80 to-slate-900/60 text-slate-300">
                 No hero image
               </div>
             )}
@@ -177,7 +197,7 @@ export function PropertyPage() {
                   aria-label={`View image ${index + 1}`}
                   className={`shrink-0 overflow-hidden rounded-2xl border-2 transition ${
                     index === activeIndex
-                      ? 'border-emerald-400/80'
+                      ? 'border-amber-400/80'
                       : 'border-white/10 opacity-60 hover:opacity-100'
                   }`}
                 >
@@ -195,12 +215,12 @@ export function PropertyPage() {
         <aside className="space-y-6 rounded-[32px] border border-white/10 bg-white/5 p-8">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-300/80">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-amber-300/80">
                 {property.listingType}
               </p>
               <h1 className="mt-3 text-4xl font-semibold text-white">{property.title}</h1>
             </div>
-            <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-sm font-medium text-emerald-200">
+            <span className="rounded-full border border-amber-400/20 bg-amber-400/10 px-3 py-1 text-sm font-medium text-amber-200">
               {property.status}
             </span>
           </div>
@@ -209,15 +229,15 @@ export function PropertyPage() {
 
           <div className="space-y-3 rounded-3xl border border-white/10 bg-slate-950/60 p-5 text-sm text-slate-300">
             <p className="flex items-center gap-2">
-              <MapPin className="size-4 text-emerald-300" />
+              <MapPin className="size-4 text-amber-300" />
               {property.township}, {property.city}
             </p>
             <p className="flex items-center gap-2">
-              <Eye className="size-4 text-emerald-300" />
+              <Eye className="size-4 text-amber-300" />
               {property.viewCount} views
             </p>
             <p>Property type: {property.propertyType}</p>
-            <p>Owner ID: {property.ownerId ?? 'Unknown'}</p>
+            <p>Owner: {property.ownerName ?? property.ownerEmail ?? 'Unknown'}</p>
             {property.latitude != null && property.longitude != null ? (
               <p>
                 Location: {property.latitude.toFixed(5)}, {property.longitude.toFixed(5)}
@@ -225,22 +245,104 @@ export function PropertyPage() {
             ) : null}
           </div>
 
-          <button
-            type="button"
-            onClick={() => wishlistMutation.mutate()}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-5 py-3 font-semibold text-slate-950 transition hover:bg-emerald-200"
-          >
-            <Heart className="size-4" />
-            Save to wishlist
-          </button>
+          {canViewDocuments ? (
+            <div className="rounded-3xl border border-white/10 bg-slate-950/60 p-5 text-sm text-slate-300">
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="flex items-center gap-2 font-semibold text-white">
+                  <FileText className="size-4 text-amber-300" />
+                  Legal documents
+                </h3>
+                {canManageDocuments ? (
+                  <button
+                    type="button"
+                    disabled={documentUploadMutation.isPending}
+                    onClick={() => documentInputRef.current?.click()}
+                    className="inline-flex items-center gap-2 rounded-full bg-amber-500 px-4 py-2 font-semibold text-slate-950 transition hover:bg-amber-400 disabled:opacity-60"
+                  >
+                    <Upload className="size-4" />
+                    {documentUploadMutation.isPending ? 'Uploading...' : 'Upload'}
+                  </button>
+                ) : null}
+              </div>
 
-          {isOwner ? (
+              <input
+                ref={documentInputRef}
+                type="file"
+                accept="application/pdf,image/jpeg,image/png,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                className="hidden"
+                onChange={(event) => {
+                  const file = event.target.files?.[0]
+                  if (file && property.id) {
+                    documentUploadMutation.mutate(file)
+                  }
+                  event.target.value = ''
+                }}
+              />
+
+              {documentUploadMutation.isError ? (
+                <p className="mt-3 rounded-xl border border-rose-400/20 bg-rose-400/10 px-3 py-2 text-xs text-rose-100">
+                  {(documentUploadMutation.error as Error).message}
+                </p>
+              ) : null}
+
+              <div className="mt-3 space-y-2">
+                {documentsQuery.isLoading ? (
+                  <p className="text-xs text-slate-500">Loading documents...</p>
+                ) : null}
+
+                {documentsQuery.data?.length ? (
+                  documentsQuery.data.map((doc) => (
+                    <div
+                      key={doc.id}
+                      className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-slate-950/70 px-3 py-2"
+                    >
+                      <div className="flex min-w-0 items-center gap-2">
+                        <FileText className="size-4 shrink-0 text-amber-300" />
+                        <a
+                          href={doc.documentUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="block truncate text-xs font-medium text-white hover:underline"
+                        >
+                          {doc.documentName}
+                        </a>
+                      </div>
+                      {canManageDocuments ? (
+                        <button
+                          type="button"
+                          disabled={documentDeleteMutation.isPending}
+                          onClick={() => {
+                            if (window.confirm(`Delete "${doc.documentName}"?`)) {
+                              documentDeleteMutation.mutate(doc.id)
+                            }
+                          }}
+                          className="shrink-0 text-xs font-medium text-rose-300 transition hover:text-rose-200 disabled:opacity-60"
+                        >
+                          Delete
+                        </button>
+                      ) : null}
+                    </div>
+                  ))
+                ) : null}
+
+                {!documentsQuery.isLoading && !documentsQuery.data?.length ? (
+                  <p className="text-xs text-slate-500">
+                    {canManageDocuments
+                      ? 'No legal documents uploaded yet.'
+                      : 'No legal documents uploaded.'}
+                  </p>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
+
+          {isOwner || isAdmin ? (
             <div>
               <div className="mb-6 border-t border-white/10" />
               <div className="flex gap-3">
               <Link
                 to={`/edit-listing/${property.id}`}
-                className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-white/15 px-5 py-3 font-semibold text-white transition hover:border-emerald-400/40 hover:bg-emerald-500/10"
+                className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-white/15 px-5 py-3 font-semibold text-white transition hover:border-amber-400/40 hover:bg-amber-500/10"
               >
                 <Pencil className="size-4" />
                 Edit listing
@@ -267,12 +369,6 @@ export function PropertyPage() {
               {(deleteMutation.error as Error).message}
             </p>
           ) : null}
-
-          {wishlistMutation.isError ? (
-            <p className="rounded-2xl border border-rose-400/20 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">
-              {(wishlistMutation.error as Error).message}
-            </p>
-          ) : null}
         </aside>
       </section>
 
@@ -281,6 +377,7 @@ export function PropertyPage() {
         <p className="mt-4 whitespace-pre-line text-slate-300">{property.description}</p>
       </section>
 
+      {!isAdmin ? (
       <section className="rounded-[32px] border border-white/10 bg-white/5 p-8">
         <h2 className="text-2xl font-semibold text-white">Interested in this property?</h2>
         <p className="mt-2 text-slate-400">
@@ -290,7 +387,7 @@ export function PropertyPage() {
         {!token ? (
           <Link
             to="/login"
-            className="mt-6 inline-flex rounded-full bg-white px-5 py-3 font-semibold text-slate-950 transition hover:bg-emerald-200"
+            className="mt-6 inline-flex rounded-full bg-white px-5 py-3 font-semibold text-slate-950 transition hover:bg-amber-200"
           >
             Login to express interest
           </Link>
@@ -301,7 +398,7 @@ export function PropertyPage() {
             Request sent — awaiting admin confirmation.
           </p>
         ) : interestQuery.data?.some((request) => request.status === 'APPROVED') ? (
-          <p className="mt-6 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100">
+          <p className="mt-6 rounded-2xl border border-amber-400/20 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">
             Your interest request was approved by the admin.
           </p>
         ) : (
@@ -322,23 +419,24 @@ export function PropertyPage() {
             <button
               type="submit"
               disabled={interestMutation.isPending}
-              className="rounded-full bg-emerald-500 px-5 py-3 font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:opacity-60"
+              className="rounded-full bg-amber-500 px-5 py-3 font-semibold text-slate-950 transition hover:bg-amber-400 disabled:opacity-60"
             >
               {interestMutation.isPending ? 'Sending...' : 'Send interest request'}
             </button>
             {interestMutation.isSuccess ? (
-              <p className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100">
+              <p className="rounded-2xl border border-amber-400/20 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">
                 Request sent — awaiting admin confirmation.
               </p>
             ) : null}
             {interestMutation.isError ? (
               <p className="rounded-2xl border border-rose-400/20 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">
                 {(interestMutation.error as Error).message}
-              </p>
-            ) : null}
-          </form>
+</p>
+          ) : null}
+        </form>
         )}
       </section>
+    ) : null}
 
       {isOwner ? (
         <section className="rounded-[32px] border border-white/10 bg-white/5 p-8">
@@ -356,20 +454,36 @@ export function PropertyPage() {
               {ownerInterestsQuery.data.map((request) => (
                 <div
                   key={request.id}
-                  className="rounded-2xl border border-emerald-400/20 bg-emerald-400/5 p-5"
+                  className="rounded-2xl border border-amber-400/20 bg-amber-400/5 p-5"
                 >
                   <p className="font-semibold text-white">
                     {request.requesterName ?? 'Anonymous buyer'}
                   </p>
-                  <a
-                    href={`mailto:${request.requesterEmail ?? ''}`}
-                    className="text-sm text-emerald-300 underline-offset-2 hover:underline"
-                  >
-                    {request.requesterEmail}
-                  </a>
+                  <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-2">
+                    <a
+                      href={`mailto:${request.requesterEmail ?? ''}`}
+                      className="text-sm text-amber-300 underline-offset-2 hover:underline"
+                    >
+                      {request.requesterEmail}
+                    </a>
+                    {request.requesterId != null ? (
+                      <Link
+                        to={`/profile/${request.requesterId}`}
+                        className="inline-flex items-center gap-1.5 text-sm font-medium text-white underline-offset-2 hover:text-amber-300 hover:underline"
+                      >
+                        <User className="size-4" />
+                        View buyer profile
+                      </Link>
+                    ) : null}
+                  </div>
                   {request.message ? (
                     <p className="mt-3 rounded-xl bg-slate-950/60 px-4 py-3 text-sm text-slate-300">
                       "{request.message}"
+                    </p>
+                  ) : null}
+                  {request.requesterBio ? (
+                    <p className="mt-3 whitespace-pre-line text-sm text-slate-400">
+                      Bio: {request.requesterBio}
                     </p>
                   ) : null}
                   <p className="mt-3 text-xs text-slate-500">
