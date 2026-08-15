@@ -115,7 +115,7 @@ export interface InterestPayload {
   message: string
 }
 
-export type InterestStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
+export type InterestStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'ACCEPTED'
 
 export interface InterestRequestItem {
   id: number
@@ -141,4 +141,32 @@ export interface PendingPropertyItem {
   ownerEmail: string | null
   ownerName: string | null
   createdAt: string
+}
+
+export interface ChatGroupItem {
+  id: number
+  interestId: number
+  propertyId: number
+  propertyTitle: string
+  buyerId: number
+  buyerName: string | null
+  sellerId: number
+  sellerName: string | null
+  lastMessage: string | null
+  lastMessageAt: string | null
+  status: string
+  createdAt: string
+}
+
+export interface ChatMessageItem {
+  id: number
+  groupId: number
+  senderId: number
+  senderName: string | null
+  content: string
+  createdAt: string
+}
+
+export interface ChatMessagePayload {
+  content: string
 }

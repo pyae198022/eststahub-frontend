@@ -2,6 +2,9 @@ import axios from 'axios'
 
 import { useAuthStore } from './auth-store'
 import type {
+  ChatGroupItem,
+  ChatMessageItem,
+  ChatMessagePayload,
   InterestPayload,
   InterestRequestItem,
   LoginPayload,
@@ -212,5 +215,36 @@ export async function fetchPendingProperties() {
 
 export async function decideProperty(id: number, action: 'approve' | 'reject') {
   const response = await api.put<ModificationResult<number>>(`/properties/admin/${id}/${action}`)
+  return response.data
+}
+
+export async function acceptGroup(interestId: number) {
+  const response = await api.post<ModificationResult<number>>(`/groups/accept/${interestId}`)
+  return response.data
+}
+
+export async function fetchMyGroups() {
+  const response = await api.get<ChatGroupItem[]>('/groups/mine')
+  return response.data
+}
+
+export async function fetchAdminGroups() {
+  const response = await api.get<ChatGroupItem[]>('/groups/admin/all')
+  return response.data
+}
+
+export async function fetchGroupMessages(groupId: number) {
+  const response = await api.get<ChatMessageItem[]>(`/groups/${groupId}/messages`)
+  return response.data
+}
+
+export async function sendGroupMessage(groupId: number, content: string) {
+  const payload: ChatMessagePayload = { content }
+  const response = await api.post<ModificationResult<number>>(`/groups/${groupId}/messages`, payload)
+  return response.data
+}
+
+export async function removeGroupMember(groupId: number, userId: number) {
+  const response = await api.delete<ModificationResult<number>>(`/groups/admin/${groupId}/members/${userId}`)
   return response.data
 }

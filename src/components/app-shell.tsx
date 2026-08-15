@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Building2, FolderOpen, Heart, Home, LogIn, Menu, PlusSquare, ShieldCheck, UserCircle2, X } from 'lucide-react'
+import { Building2, FolderOpen, Heart, Home, LogIn, Menu, MessageSquare, PlusSquare, ShieldCheck, UserCircle2, X } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router-dom'
 
 import { fetchOwnerInterests, fetchPendingInterests, fetchPendingProperties, fetchProfile } from '../lib/api'
@@ -64,6 +64,7 @@ export function AppShell() {
           { to: '/create-listing', label: 'Create Listing', icon: PlusSquare },
         ] : []),
         ...(isAdmin ? [{ to: '/admin', label: 'Admin', icon: ShieldCheck }] : []),
+        { to: '/chat', label: 'Chats', icon: MessageSquare },
         { to: '/profile', label: 'Profile', icon: UserCircle2 },
       ]
 

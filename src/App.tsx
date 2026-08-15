@@ -2,6 +2,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 
 import { AppShell } from './components/app-shell'
 import { AdminPage } from './pages/admin-page'
+import { ChatPage } from './pages/chat-page'
 import { CreateListingPage } from './pages/create-listing-page'
 import { HomePage } from './pages/home-page'
 import { LoginPage } from './pages/login-page'
@@ -29,6 +30,7 @@ const router = createBrowserRouter([
       { path: 'my-listings', element: <MyListingsPage /> },
       { path: 'edit-listing/:id', element: <CreateListingPage /> },
       { path: 'admin', element: <AdminPage /> },
+      { path: 'chat', element: <ChatPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

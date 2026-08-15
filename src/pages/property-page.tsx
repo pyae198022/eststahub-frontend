@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, ChevronLeft, ChevronRight, Eye, FileText, MapPin, Pencil, Trash2, Upload, User } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
-import { deleteProperty, deletePropertyDocument, fetchMyInterests, fetchOwnerInterests, fetchProfile, fetchProperty, fetchPropertyDocuments, submitInterest, uploadPropertyDocument } from '../lib/api'
+import { deleteProperty, deletePropertyDocument, acceptGroup, fetchMyInterests, fetchOwnerInterests, fetchProfile, fetchProperty, fetchPropertyDocuments, submitInterest, uploadPropertyDocument } from '../lib/api'
 import { useAuthStore } from '../lib/auth-store'
 import { PropertyMap } from '../components/property-map'
 import { formatPrice } from '../lib/utils'
@@ -64,6 +64,14 @@ export function PropertyPage() {
         propertyQuery.data?.id,
     ),
     retry: false,
+  })
+
+  const acceptGroupMutation = useMutation({
+    mutationFn: (interestId: number) => acceptGroup(interestId),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['interests-owner', propertyQuery.data?.id] })
+      await queryClient.invalidateQueries({ queryKey: ['seller-interests'] })
+    },
   })
 
   const documentsQuery = useQuery({
@@ -442,7 +450,8 @@ export function PropertyPage() {
         <section className="rounded-[32px] border border-white/10 bg-white/5 p-8">
           <h2 className="text-2xl font-semibold text-white">Interested buyers</h2>
           <p className="mt-2 text-slate-400">
-            Buyers the admin confirmed for this listing. Contact them to close the deal.
+            Buyers the admin confirmed for this listing. Accept a buyer to open a private chat
+            group with them.
           </p>
 
           {ownerInterestsQuery.isLoading ? (
@@ -489,6 +498,23 @@ export function PropertyPage() {
                   <p className="mt-3 text-xs text-slate-500">
                     Confirmed {new Date(request.createdAt).toLocaleDateString()}
                   </p>
+                  {request.status === 'APPROVED' ? (
+                    <button
+                      type="button"
+                      disabled={acceptGroupMutation.isPending}
+                      onClick={() => acceptGroupMutation.mutate(request.id)}
+                      className="mt-4 inline-flex items-center gap-2 rounded-full bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-amber-300 disabled:opacity-40"
+                    >
+                      {acceptGroupMutation.isPending ? 'Creating group...' : 'Accept into chat group'}
+                    </button>
+                  ) : request.status === 'ACCEPTED' ? (
+                    <Link
+                      to="/chat"
+                      className="mt-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/20"
+                    >
+                      Group active — open chat
+                    </Link>
+                  ) : null}
                 </div>
               ))}
             </div>
