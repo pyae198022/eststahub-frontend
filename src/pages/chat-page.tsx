@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Loader2, MessageSquare, Send, UserX } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 
 import {
@@ -42,20 +42,6 @@ export function ChatPage() {
   const groups = groupsQuery.data ?? []
   const selectedGroup: ChatGroupItem | undefined =
     groups.find((group) => group.id === selectedGroupId) ?? groups[0]
-
-  const groupsByProperty = useMemo(() => {
-    const sections = new Map<number, { propertyId: number; propertyTitle: string; groups: ChatGroupItem[] }>()
-    for (const group of groups) {
-      const section = sections.get(group.propertyId) ?? {
-        propertyId: group.propertyId,
-        propertyTitle: group.propertyTitle,
-        groups: [],
-      }
-      section.groups.push(group)
-      sections.set(group.propertyId, section)
-    }
-    return [...sections.values()]
-  }, [groups])
 
   const messagesQuery = useQuery({
     queryKey: ['chat-messages', selectedGroup?.id],
@@ -134,51 +120,36 @@ export function ChatPage() {
         </div>
       ) : (
         <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
-          <aside className="space-y-6">
-            {groupsByProperty.map((section) => (
-              <div key={section.propertyId}>
-                <div className="mb-2 flex items-center justify-between gap-2">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-amber-300/80">
-                    {section.propertyTitle}
+          <aside className="space-y-2">
+            {groups.map((group) => (
+              <button
+                key={group.id}
+                type="button"
+                onClick={() => setSelectedGroupId(group.id)}
+                className={cn(
+                  'w-full rounded-2xl border px-4 py-3 text-left transition',
+                  selectedGroup?.id === group.id
+                    ? 'border-amber-400/40 bg-amber-400/10'
+                    : 'border-white/10 bg-white/5 hover:bg-white/10',
+                )}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <p className="truncate text-sm font-medium text-white">
+                    {isAdmin
+                      ? `${group.buyerName ?? 'Buyer'} ↔ ${group.sellerName ?? 'Seller'}`
+                      : `with ${group.buyerId === myId ? group.sellerName ?? 'Seller' : group.buyerName ?? 'Buyer'}`}
                   </p>
-                  <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-slate-400">
-                    {section.groups.length}
-                  </span>
+                  {group.lastMessageAt ? (
+                    <span className="shrink-0 text-xs text-slate-500">
+                      {new Date(group.lastMessageAt).toLocaleDateString()}
+                    </span>
+                  ) : null}
                 </div>
-                <div className="space-y-2">
-                  {section.groups.map((group) => (
-                    <button
-                      key={group.id}
-                      type="button"
-                      onClick={() => setSelectedGroupId(group.id)}
-                      className={cn(
-                        'w-full rounded-2xl border px-4 py-3 text-left transition',
-                        selectedGroup?.id === group.id
-                          ? 'border-amber-400/40 bg-amber-400/10'
-                          : 'border-white/10 bg-white/5 hover:bg-white/10',
-                      )}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="truncate text-sm font-medium text-white">
-                          {isAdmin
-                            ? `${group.buyerName ?? 'Buyer'} ↔ ${group.sellerName ?? 'Seller'}`
-                            : `with ${group.buyerId === myId ? group.sellerName ?? 'Seller' : group.buyerName ?? 'Buyer'}`}
-                        </p>
-                        {group.lastMessageAt ? (
-                          <span className="shrink-0 text-xs text-slate-500">
-                            {new Date(group.lastMessageAt).toLocaleDateString()}
-                          </span>
-                        ) : null}
-                      </div>
-                      {group.lastMessage ? (
-                        <p className="mt-1 truncate text-xs text-slate-500">{group.lastMessage}</p>
-                      ) : (
-                        <p className="mt-1 text-xs text-slate-600">No messages yet</p>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
+                <p className="mt-0.5 truncate text-xs text-slate-500">{group.propertyTitle}</p>
+                {group.lastMessage ? (
+                  <p className="mt-1 truncate text-xs text-slate-600">{group.lastMessage}</p>
+                ) : null}
+              </button>
             ))}
           </aside>
 
